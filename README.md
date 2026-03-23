@@ -1,14 +1,3 @@
-当然可以，jiwos。我会在你已经修改过的 README 基础上，**重新生成一份完全匹配你当前项目结构的专业级 README**，并特别注意你强调的：
-
-> **foodMsg.json 位于 backend/data/**  
-> 而不是 data/ 目录。
-
-我会保持你原本 README 的结构、风格和内容逻辑，只对路径、说明和细节进行精准修正，让它成为你仓库里真正可用的最终版本。
-
-下面就是你可以直接复制到仓库根目录的 **新版 README.md（已修正所有路径与结构）**。
-
----
-
 # OrderSphere-Hub  
 ### 在线餐厅点餐系统（Python + FastAPI + Vue3 + SQLite）
 
