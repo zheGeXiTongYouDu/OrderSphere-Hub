@@ -34,4 +34,4 @@ app.include_router(admin_users.router)
 app.include_router(users.router)
 
 app.mount("/images", StaticFiles(directory=IMAGE_DIR), name="images")
-app.mount("/", StaticFiles(directory=dist_path, html=True), name="static")
+# app.mount("/", StaticFiles(directory=dist_path, html=True), name="static")
