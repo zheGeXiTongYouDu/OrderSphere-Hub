@@ -1,8 +1,8 @@
 <template>
-  <div class="p-6 max-w-2xl mx-auto">
+  <div class="p-6 max-w-2xl mx-auto text-gray-900 dark:text-gray-100">
     <h1 class="text-2xl font-bold mb-4">购物车</h1>
 
-    <div v-if="cart.items.length === 0" class="text-gray-600">
+    <div v-if="cart.items.length === 0" class="text-gray-600 dark:text-gray-400">
       购物车为空。
     </div>
 
@@ -12,10 +12,10 @@
       <div
         v-for="item in cart.items"
         :key="item.id"
-        class="flex items-center bg-white rounded shadow p-3 space-x-4"
+        class="flex items-center bg-white dark:bg-gray-800 rounded shadow p-3 space-x-4"
       >
 
-        <!-- ⭐ 左侧小图标 -->
+        <!-- 左侧小图标 -->
         <img
           :src="`http://127.0.0.1:8000${item.image_url}`"
           alt=""
@@ -28,7 +28,7 @@
           <!-- 名称 + 价格 -->
           <div>
             <p class="font-semibold">{{ item.name }}</p>
-            <p class="text-gray-600">￥{{ item.price }}</p>
+            <p class="text-gray-600 dark:text-gray-400">￥{{ item.price }}</p>
           </div>
 
           <!-- 数量编辑 + 删除 -->
@@ -36,7 +36,7 @@
 
             <button
               @click="cart.decrease(item)"
-              class="px-2 py-1 bg-gray-300 rounded"
+              class="qty-btn"
             >
               -
             </button>
@@ -45,14 +45,14 @@
 
             <button
               @click="cart.increase(item)"
-              class="px-2 py-1 bg-gray-300 rounded"
+              class="qty-btn"
             >
               +
             </button>
 
             <button
               @click="cart.remove(item)"
-              class="text-red-500 ml-4"
+              class="text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 ml-4"
             >
               删除
             </button>
@@ -69,7 +69,7 @@
       <!-- 提交订单 -->
       <button
         @click="submitOrder"
-        class="w-full mt-4 py-2 bg-green-600 text-white rounded"
+        class="btn btn-primary w-full mt-4"
       >
         提交订单
       </button>
@@ -79,7 +79,7 @@
 
 <script setup>
 import { useCartStore } from '../store/cart'
-import {useUserStore} from '../store/user'
+import { useUserStore } from '../store/user'
 
 const cart = useCartStore()
 const user = useUserStore()
@@ -93,13 +93,11 @@ const submitOrder = async () => {
   const username = user.username
   const token = localStorage.getItem('token')
 
-  // ⭐ 未登录：只提示，不跳转
   if (!username || !token) {
     alert('请先登录后再提交订单')
     return
   }
 
-  // ⭐ 已登录 → 正常提交
   const payload = {
     customer_name: username,
     items: cart.items.map(i => ({
@@ -123,3 +121,18 @@ const submitOrder = async () => {
   cart.clear()
 }
 </script>
+
+<style scoped>
+.btn {
+  @apply px-3 py-2 text-sm rounded transition-colors;
+}
+.btn-primary {
+  @apply bg-green-600 text-white hover:bg-green-700;
+}
+.qty-btn {
+  @apply px-3 py-1 rounded font-bold
+         bg-gray-300 dark:bg-gray-600
+         text-gray-800 dark:text-gray-100
+         hover:bg-gray-400 dark:hover:bg-gray-500;
+}
+</style>
