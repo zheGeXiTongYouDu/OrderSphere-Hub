@@ -1,13 +1,13 @@
 <template>
   <div class="max-w-3xl mx-auto mt-10 bg-white dark:bg-gray-800 p-6 rounded shadow">
-    <h2 class="text-2xl font-bold mb-4 text-center">编辑个人资料</h2>
+    <h2 class="text-2xl font-bold mb-4 text-center text-gray-900 dark:text-white">编辑个人资料</h2>
 
     <!-- 账户信息行（邮箱/登出/修改密码）- 简化展示 -->
     <div class="mb-6">
       <div class="flex items-center justify-between">
         <div>
-          <div class="text-sm text-gray-600">登录邮箱</div>
-          <div class="font-medium">{{ userEmail || '未设置' }}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-300">登录邮箱</div>
+          <div class="font-medium text-gray-800 dark:text-gray-100">{{ userEmail || '未设置' }}</div>
         </div>
 
         <div class="flex items-center space-x-3">
@@ -22,13 +22,13 @@
       <table class="w-full">
         <tbody>
           <tr>
-            <td style="padding-top:8px;text-align:right;width:25%" class="text-gray-700">
+            <td style="padding-top:8px;text-align:right;width:25%" class="text-gray-700 dark:text-gray-200">
               用户名 :
             </td>
             <td style="padding-top:8px;text-align:left;width:75%">
               <!-- 显示模式 -->
               <div v-if="!editingNick" id="div_nickname_display">
-                <span class="mr-4 font-medium">{{ username }}</span>
+                <span class="mr-4 font-medium text-gray-800 dark:text-gray-100">{{ username }}</span>
                 <button type="button" class="bt_sml_defa" @click="dispNickChange">修改昵称</button>
               </div>
 
@@ -47,9 +47,9 @@
                 <button type="button" @click="cancelNickChange" class="bt_sml_defa_narr ml-2">取消</button>
 
                 <div class="mt-2">
-                  <p v-if="checking" class="text-xs text-gray-500">检查中...</p>
-                  <p v-else-if="tempNickname && nickAvailable === true" class="text-xs text-green-600">该用户名可用</p>
-                  <p v-else-if="tempNickname && nickAvailable === false" class="text-xs text-red-600">该用户名已被占用</p>
+                  <p v-if="checking" class="text-xs text-gray-500 dark:text-gray-400">检查中...</p>
+                  <p v-else-if="tempNickname && nickAvailable === true" class="text-xs text-green-600 dark:text-green-400">该用户名可用</p>
+                  <p v-else-if="tempNickname && nickAvailable === false" class="text-xs text-red-600 dark:text-red-400">该用户名已被占用</p>
                 </div>
               </div>
             </td>
@@ -57,18 +57,18 @@
 
           <!-- 头像上传区域 -->
           <tr>
-            <td style="padding-top:18px;text-align:right;width:25%" class="text-gray-700">
+            <td style="padding-top:18px;text-align:right;width:25%" class="text-gray-700 dark:text-gray-200">
               头像 :
             </td>
             <td style="padding-top:18px;text-align:left;width:75%">
               <div class="flex items-start space-x-4">
-                <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
                   <img :src="currentAvatar" alt="avatar" class="w-full h-full object-cover" />
                 </div>
 
                 <div class="flex-1">
-                  <div class="mb-2 text-sm text-gray-600">上传头像（仅支持正方形图片，将被缩放为 100×100）</div>
-                  <input type="file" accept="image/*" @change="onAvatarFileChange" />
+                  <div class="mb-2 text-sm text-gray-600 dark:text-gray-300">上传头像（仅支持正方形图片，将被缩放为 100×100）</div>
+                  <input type="file" accept="image/*" @change="onAvatarFileChange" class="text-sm text-gray-700 dark:text-gray-200" />
                   <div class="mt-2 space-x-2">
                     <button v-if="selectedBlob" type="button" @click="uploadAvatar" class="bt_sml_main">上传头像</button>
                     <button v-if="selectedBlob" type="button" @click="clearAvatarSelection" class="bt_sml_defa_narr">取消</button>
@@ -76,7 +76,7 @@
 
                   <p v-if="avatarError" class="text-red-500 text-sm mt-2">{{ avatarError }}</p>
                   <p v-if="avatarSuccess" class="text-green-600 text-sm mt-2">{{ avatarSuccess }}</p>
-                  <p v-if="avatarInfo" class="text-xs text-gray-500 mt-2">{{ avatarInfo }}</p>
+                  <p v-if="avatarInfo" class="text-xs text-gray-500 dark:text-gray-400 mt-2">{{ avatarInfo }}</p>
                 </div>
               </div>
             </td>
@@ -93,9 +93,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '../store/user'
+import {ref, computed} from 'vue'
+import {useRouter} from 'vue-router'
+import {useUserStore} from '../store/user'
 
 // 简单防抖函数
 function debounce(fn, wait = 300) {
@@ -141,7 +141,9 @@ async function checkNickname(name) {
     checking.value = false
   }
 }
+
 const debouncedNickCheck = debounce((val) => checkNickname(val), 400)
+
 function dispNickChange() {
   tempNickname.value = username.value
   editingNick.value = true
@@ -149,6 +151,7 @@ function dispNickChange() {
   error.value = ''
   success.value = ''
 }
+
 function cancelNickChange() {
   editingNick.value = false
   tempNickname.value = username.value
@@ -156,6 +159,7 @@ function cancelNickChange() {
   error.value = ''
   success.value = ''
 }
+
 async function confirmNickChange() {
   error.value = ''
   success.value = ''
@@ -180,7 +184,7 @@ async function confirmNickChange() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ username: newName })
+      body: JSON.stringify({username: newName})
     })
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
@@ -195,16 +199,19 @@ async function confirmNickChange() {
     error.value = '网络错误'
   }
 }
+
 function onNickInput() {
   error.value = ''
   success.value = ''
   debouncedNickCheck(tempNickname.value.trim())
 }
+
 async function onSubmit() {
   if (editingNick.value) {
     await confirmNickChange()
   }
 }
+
 const goChangePassword = () => router.push('/change-password')
 const logout = () => {
   user.logout()
@@ -228,10 +235,11 @@ function nameColorSeed(name) {
   const r = (h & 0xff0000) >> 16
   const g = (h & 0x00ff00) >> 8
   const b = h & 0x0000ff
-  return { r: (r + 200) % 256, g: (g + 120) % 256, b: (b + 40) % 256 }
+  return {r: (r + 200) % 256, g: (g + 120) % 256, b: (b + 40) % 256}
 }
+
 function generateColorAvatarDataUrl(name, size = 100) {
-  const { r, g, b } = nameColorSeed(name || 'U')
+  const {r, g, b} = nameColorSeed(name || 'U')
   const canvas = document.createElement('canvas')
   canvas.width = size
   canvas.height = size
@@ -248,9 +256,14 @@ function generateColorAvatarDataUrl(name, size = 100) {
   }
   return canvas.toDataURL('image/png')
 }
+
 const defaultAvatar = generateColorAvatarDataUrl(user.username || 'U', 100)
 const currentAvatar = computed(() => {
-  if (user.avatar) return `http://127.0.0.1:8000${user.avatar}`
+  if (user.avatar) {
+    // user.avatar is expected to be like "/user_images/user_1.png" or a full data URL
+    if (user.avatar.startsWith('http') || user.avatar.startsWith('data:')) return user.avatar
+    return `http://127.0.0.1:8000${user.avatar}`
+  }
   if (previewAvatar.value) return previewAvatar.value
   return defaultAvatar
 })
@@ -348,7 +361,7 @@ async function uploadAvatar() {
     const data = await res.json().catch(() => ({}))
     const url = data.url || null
     if (url) {
-      // 使用后端返回的 URL（ /images/user_{id}.png）
+      // 使用后端返回的 URL（例如 /user_images/user_{id}.png）
       user.setAvatar(url)
       avatarSuccess.value = '上传成功'
       previewAvatar.value = null
@@ -367,9 +380,8 @@ async function uploadAvatar() {
 </script>
 
 <style scoped>
-/* 保持原有样式，同时确保头像为圆形 */
 .input_sml {
-  @apply border border-gray-300 p-1 rounded;
+  @apply border border-gray-300 p-1 rounded bg-white text-gray-900;
 }
 
 .bt_sml_defa {
@@ -382,12 +394,9 @@ async function uploadAvatar() {
   @apply bg-blue-600 text-white py-1 px-3 rounded;
 }
 
-.btn-logout {
-  @apply w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 transition;
-}
-
 /* 确保头像 img 圆形 */
 img {
   border-radius: 9999px;
+  display: block;
 }
 </style>
