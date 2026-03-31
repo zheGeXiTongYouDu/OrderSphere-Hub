@@ -1,21 +1,41 @@
 <template>
-  <!-- 使用 Teleport 将弹窗挂载到 body，避免样式污染 -->
   <Teleport to="body">
     <Transition name="dialog-fade">
-      <div v-if="visible" class="dialog-overlay" @click.self="handleOverlayClick">
+      <div
+        v-if="visible"
+        class="dialog-overlay"
+        :class="[
+          overlay ? 'dialog-overlay-dark' : 'no-overlay',
+          `position-${position}`
+        ]"
+        @click.self="handleOverlayClick"
+      >
         <div
           class="dialog-container"
-          :style="{
-            width: dialogWidth,
-            height: dialogHeight,
-          }"
+          :style="containerStyle"
         >
-          <!-- 内容区域 -->
           <div class="dialog-content">
             <slot name="header">
-              <h3 v-if="title" class="dialog-title">{{ title }}</h3>
+              <h3
+                v-if="title"
+                class="dialog-title"
+                :style="{
+                  textAlign: titleAlign,
+                  font: titleFont,
+                  color: titleColor,
+                }"
+              >
+                {{ title }}
+              </h3>
             </slot>
-            <div class="dialog-message">
+            <div
+              class="dialog-message"
+              :style="{
+                textAlign: messageAlign,
+                font: messageFont,
+                color: messageColor,
+              }"
+            >
               {{ message }}
             </div>
             <slot name="footer">
@@ -32,39 +52,56 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
-// --- 响应式数据 ---
 const visible = ref(false)
 const message = ref('')
 const title = ref('')
-const dialogWidth = ref('300px')
-const dialogHeight = ref('auto')
+const dialogWidth = ref('')      // 空字符串表示未指定
+const dialogHeight = ref('')     // 空字符串表示未指定
 const showButtons = ref(false)
-let durationTimer = null         // 自动关闭定时器
-let maxDurationTimer = null      // 最大存活定时器
-let pendingResolve = null        // 当前 Promise 的 resolve
-let pendingReject = null         // 当前 Promise 的 reject
-let isResolved = false           // 防止重复 resolve/reject
+const position = ref('center')   // 弹窗位置 str值“'center'、'top'、'bottom'、'left'、'right'、'top-left'、'top-right'、'bottom-left'、'bottom-right'”
+const overlay = ref(true)        // 背景遮罩
 
-// --- 关闭弹窗并清理资源 ---
+const titleAlign = ref('left')
+const messageAlign = ref('left')
+const titleFont = ref('')
+const titleColor = ref('')
+const messageFont = ref('')
+const messageColor = ref('')
+const closeOnClickOverlay = ref(true)
+
+let durationTimer = null
+let maxDurationTimer = null
+let pendingResolve = null
+let pendingReject = null
+let isResolved = false
+
+// 计算弹窗容器的内联样式
+const containerStyle = computed(() => {
+  const style = {}
+  if (dialogWidth.value) {
+    style.width = dialogWidth.value
+  }
+  if (dialogHeight.value) {
+    style.height = dialogHeight.value
+  }
+  return style
+})
+
 const close = (result) => {
   if (!visible.value) return
 
-  // 清除所有定时器
   if (durationTimer) clearTimeout(durationTimer)
   if (maxDurationTimer) clearTimeout(maxDurationTimer)
   durationTimer = null
   maxDurationTimer = null
 
-  // 调用 Promise 回调（如果尚未处理）
   if (!isResolved) {
     isResolved = true
     if (result !== undefined && pendingResolve) {
       pendingResolve(result)
     } else if (pendingReject && result === undefined) {
-      // 若 result 为 undefined 且我们期望 reject（比如超时未交互），可触发 reject
-      // 但为了统一，默认无按钮时 resolve undefined，有按钮且超时未操作则 reject
       if (showButtons.value && !result) {
         pendingReject(new Error('Dialog timeout'))
       } else if (pendingResolve) {
@@ -78,18 +115,10 @@ const close = (result) => {
   visible.value = false
 }
 
-// --- 用户点击确认 ---
-const handleConfirm = () => {
-  close('confirm')
-}
-
-// --- 用户点击取消 ---
-const handleCancel = () => {
-  close('cancel')
-}
-
-// --- 点击遮罩层关闭（可选，此处默认关闭）---
+const handleConfirm = () => close('confirm')
+const handleCancel = () => close('cancel')
 const handleOverlayClick = () => {
+  if (!closeOnClickOverlay.value) return
   if (showButtons.value) {
     close('cancel')
   } else {
@@ -97,121 +126,182 @@ const handleOverlayClick = () => {
   }
 }
 
-// --- 对外暴露的 open 方法 ---
 const open = (options) => {
-  // 防止重复打开
-  if (visible.value) {
-    // 如果已有弹窗，可选择关闭旧的再打开（简单处理：先关闭）
-    close()
-  }
+  if (visible.value) close()
 
-  // 合并默认配置
   const {
     message: msg,
     title: ttl = '',
-    width = '300px',
-    height = 'auto',
+    width = '',           // 默认空字符串 → 自适应
+    height = '',          // 默认空字符串 → 自适应
     showButtons: btns = false,
-    duration = 2000,          // 默认 2 秒自动关闭（无按钮时）
-    maxDuration = 0,          // 0 表示不限制
-    hasReturnValue = false,   // 是否有返回值（决定 Promise 行为）
+    duration = 2000,
+    maxDuration = 0,
+    hasReturnValue = false,
+    position: pos = 'center',
+    overlay: ov = true,
+    // 字体样式参数
+    titleAlign: tAlign = 'left',
+    messageAlign: mAlign = 'left',
+    titleFont: tFont = '',
+    titleColor: tColor = '',
+    messageFont: mFont = '',
+    messageColor: mColor = '',
+    closeOnClickOverlay: cOverlay = undefined,
   } = options
 
-  // 赋值
   message.value = msg
   title.value = ttl
   dialogWidth.value = width
   dialogHeight.value = height
   showButtons.value = btns
-  isResolved = false
+  position.value = pos
+  overlay.value = ov
+  titleAlign.value = tAlign
+  messageAlign.value = mAlign
+  titleFont.value = tFont
+  titleColor.value = tColor
+  messageFont.value = mFont
+  messageColor.value = mColor
 
-  // 清除之前的 Promise 回调
+  if (cOverlay !== undefined) {
+    closeOnClickOverlay.value = cOverlay
+  } else {
+    closeOnClickOverlay.value = ov
+  }
+
+  isResolved = false
   pendingResolve = null
   pendingReject = null
 
-  // 显示弹窗
   visible.value = true
 
-  // 返回 Promise
   const promise = new Promise((resolve, reject) => {
     pendingResolve = resolve
     pendingReject = reject
   })
 
-  // --- 设置自动关闭定时器（无按钮时）---
   if (!btns && duration > 0) {
-    durationTimer = setTimeout(() => {
-      close()   // 无返回值时 resolve(undefined)
-    }, duration)
+    durationTimer = setTimeout(() => close(), duration)
   }
 
-  // --- 设置最大存活定时器（有按钮且 maxDuration > 0）---
   if (btns && maxDuration > 0) {
-    maxDurationTimer = setTimeout(() => {
-      // 超时自动关闭，视为用户取消（或根据需求自定义）
-      close('timeout')
-    }, maxDuration)
-  }
-
-  // 如果 hasReturnValue 为 false，则 Promise 不携带结果（但依然可以等待关闭）
-  if (!hasReturnValue) {
-    // 对于无返回值场景，我们仍可返回 Promise，但调用者可能不关心结果
-    // 这里简单处理：resolve 时传 undefined，但如果有按钮且用户点击，仍会触发 resolve
-    // 实际上无返回值意味着调用者不需要等待，所以我们也可以不返回 Promise，
-    // 但为了统一接口，我们仍然返回 Promise，并忽略其值。
+    maxDurationTimer = setTimeout(() => close('timeout'), maxDuration)
   }
 
   return promise
 }
 
-// 暴露 open 方法给父组件
 defineExpose({ open })
 </script>
 
 <style scoped>
-/* 遮罩层 */
+/* 遮罩层基础样式 */
 .dialog-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 1000;
 }
 
-/* 弹窗容器 */
+/* 背景遮罩样式 */
+.dialog-overlay-dark {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* 无遮罩层样式（完全透明，不阻挡点击） */
+.no-overlay {
+  background-color: transparent;
+  pointer-events: none;
+}
+
+/* ========== 位置预设 ========== */
+.position-center {
+  align-items: center;
+  justify-content: center;
+}
+.position-top {
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 20px;
+}
+.position-bottom {
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 20px;
+}
+.position-left {
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 20px;
+}
+.position-right {
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 20px;
+}
+.position-top-left {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 20px;
+}
+.position-top-right {
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 20px;
+}
+.position-bottom-left {
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 20px;
+}
+.position-bottom-right {
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 20px;
+}
+
+/* 弹窗容器自适应样式 */
 .dialog-container {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
   overflow: hidden;
-  max-width: 90vw;
+  /* 自适应宽度：最小200px，最大90vw，由内容撑开 */
+  width: auto;
+  min-width: 200px;
+  max-width: 60vw;
+  /* 自适应高度：最大60vh，内容决定高度 */
+  height: auto;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
+  /* 确保弹窗容器可点击（覆盖父级 pointer-events: none） */
+  pointer-events: auto;
 }
 
-/* 内容区域 */
 .dialog-content {
   padding: 20px;
   flex: 1;
   overflow-y: auto;
 }
 
+/* 默认样式（未提供自定义时使用） */
 .dialog-title {
   margin-top: 0;
   margin-bottom: 12px;
   font-size: 1.2rem;
   font-weight: 600;
+  color: #1f2937;
 }
 
 .dialog-message {
   margin-bottom: 20px;
   line-height: 1.5;
+  color: #374151;
 }
 
 .dialog-buttons {
@@ -234,7 +324,6 @@ defineExpose({ open })
   background-color: #f0f0f0;
   color: #333;
 }
-
 .dialog-btn-cancel:hover {
   background-color: #e0e0e0;
 }
@@ -243,9 +332,33 @@ defineExpose({ open })
   background-color: #1890ff;
   color: white;
 }
-
 .dialog-btn-confirm:hover {
   background-color: #40a9ff;
+}
+
+/* ========== 夜间模式支持 ========== */
+.dark .dialog-container {
+  background: #1f2937;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+.dark .dialog-title {
+  color: #f3f4f6;
+}
+.dark .dialog-message {
+  color: #d1d5db;
+}
+.dark .dialog-btn-cancel {
+  background-color: #374151;
+  color: #e5e7eb;
+}
+.dark .dialog-btn-cancel:hover {
+  background-color: #4b5563;
+}
+.dark .dialog-btn-confirm {
+  background-color: #3b82f6;
+}
+.dark .dialog-btn-confirm:hover {
+  background-color: #60a5fa;
 }
 
 /* 过渡动画 */
@@ -253,12 +366,10 @@ defineExpose({ open })
 .dialog-fade-leave-active {
   transition: opacity 0.3s ease;
 }
-
 .dialog-fade-enter-from,
 .dialog-fade-leave-to {
   opacity: 0;
 }
-
 .dialog-fade-enter-to,
 .dialog-fade-leave-from {
   opacity: 1;

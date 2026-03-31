@@ -85,16 +85,21 @@ const decrease = () => {
   if (quantity.value > 1) quantity.value--
 }
 
-const showConfirmDialog = async () => {
+const showSimpleDialog = async () => {
   try {
     // 等待弹窗组件实例可用
     const dialog = await waitForDialog()
     const result = await dialog.open({
-      message: '你确定要执行此操作吗？',
-      title: '确认',
-      showButtons: true,
-      maxDuration: 10000,
+      // message: '已加入购物车：' + props.item.name + '×' + quantity.value,
+      title: '购物车',
+      message: '已加入购物车：' + props.item.name + '×' + quantity.value,
+      messageerror: 'center',
+      duration: 1000,
+      overlay: false,
+      position: 'top'
     })
+      // 原提示信息
+      // alert(`已加入购物车：${props.item.name} × ${quantity.value}`)
     console.log('用户点击了：', result)
   } catch (error) {
     console.error('弹窗超时或取消', error)
@@ -106,7 +111,7 @@ const add = async () => {
     ...props.item,
     quantity: quantity.value
   })
-  await showConfirmDialog()
+  await showSimpleDialog()
   quantity.value = 1
 }
 </script>
