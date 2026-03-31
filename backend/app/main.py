@@ -25,6 +25,9 @@ USER_IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 # SQLite DB 文件路径（与 settings.database_url 对应）
 DB_PATH = BASE_DIR.parent / "db" / "ordersphere.db"
 
+# 确保 db 文件夹存在，避免首次创建数据库时报错
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
 # 在创建表或使用之前，确保数据库中 users 表包含 avatar 列（如果表已存在但缺列）
 try:
     ensure_avatar_column(DB_PATH)
