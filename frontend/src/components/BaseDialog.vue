@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <Transition name="dialog-fade">
+    <Transition name="dialog-show">
       <div
         v-if="visible"
         class="dialog-overlay"
@@ -71,6 +71,10 @@ const messageFont = ref('')
 const messageColor = ref('')
 const closeOnClickOverlay = ref(true)
 
+// 自定义按钮回调
+let onConfirmCallback = null
+let onCancelCallback = null
+
 let durationTimer = null
 let maxDurationTimer = null
 let pendingResolve = null
@@ -115,8 +119,28 @@ const close = (result) => {
   visible.value = false
 }
 
-const handleConfirm = () => close('confirm')
-const handleCancel = () => close('cancel')
+const handleConfirm = () => {
+  if (onConfirmCallback) {
+    onConfirmCallback({
+      message: message.value,
+      title: title.value,
+      showButtons: showButtons.value
+    })
+  }
+  close('confirm')
+}
+
+const handleCancel = () => {
+  if (onCancelCallback) {
+    onCancelCallback({
+      message: message.value,
+      title: title.value,
+      showButtons: showButtons.value
+    })
+  }
+  close('cancel')
+}
+
 const handleOverlayClick = () => {
   if (!closeOnClickOverlay.value) return
   if (showButtons.value) {
@@ -148,6 +172,9 @@ const open = (options) => {
     messageFont: mFont = '',
     messageColor: mColor = '',
     closeOnClickOverlay: cOverlay = undefined,
+    // 自定义按钮回调
+    onConfirm = null,
+    onCancel = null,
   } = options
 
   message.value = msg
@@ -169,6 +196,10 @@ const open = (options) => {
   } else {
     closeOnClickOverlay.value = ov
   }
+
+  // 存储自定义回调
+  onConfirmCallback = onConfirm
+  onCancelCallback = onCancel
 
   isResolved = false
   pendingResolve = null
@@ -196,6 +227,25 @@ defineExpose({ open })
 </script>
 
 <style scoped>
+
+/* 过渡动画（淡入淡出 + 缩放） */
+.dialog-show-enter-active,
+.dialog-show-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.dialog-show-enter-from,
+.dialog-show-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.dialog-show-enter-to,
+.dialog-show-leave-from {
+  opacity: 1;
+  transform: scale(1);
+}
+
 /* 遮罩层基础样式 */
 .dialog-overlay {
   position: fixed;
