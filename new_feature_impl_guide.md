@@ -226,7 +226,7 @@
 2. 菜单域（Menu-centric）
 - 类：MenuItem, Category, MenuImage, Tag, Nutrition
 - 关系：Category 1─* MenuItem；MenuItem 1─* MenuImage；MenuItem 可有多个 Tag。
-3. 用户与认证（User/Auth）
+3. [已选]用户与认证（User/Auth）
 - 类：User, Role, Session/Token, AvatarImage, Address
 - 关系：User ── Role（多对多或一对多）；User 1─* Address；User 一对一 AvatarImage；Token 关联 User。
 4. 管理/审计（Admin/Audit）
